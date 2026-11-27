@@ -6,7 +6,7 @@
 
 ## 本机运行
 
-需要 Python 3.10 或更新版本、Maven、Java 17 或 21。可用 `INVOICES_JAVA` 指定 Java 可执行文件的绝对路径。
+需要 Python 3.11 或更新版本、Maven、Java 17 或 21。Pillow 13 要求 Python 3.11 起。可用 `INVOICES_JAVA` 指定 Java 可执行文件的绝对路径。
 
 ```sh
 mvn -f ofd/pom.xml package
