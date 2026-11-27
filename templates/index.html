@@ -1,0 +1,113 @@
+<!doctype html>
+<html lang="zh-Hans">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>发票省纸合并{% if vector %} · 矢量版{% endif %}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='invoice.css') }}">
+    <script src="{{ url_for('static', filename='invoice.js') }}" defer></script>
+</head>
+<body class="{{ 'vector' if vector else 'classic' }}">
+    <nav aria-label="切换版本">
+        {% if vector %}
+        <a href="{{ url_for('legacy') }}">返回旧版</a>
+        {% else %}
+        <a href="{{ url_for('vector') }}">进入新版 <span aria-hidden="true">↗</span></a>
+        {% endif %}
+    </nav>
+    <main>
+        <div class="tool">
+            <header>
+                {% if vector %}
+                <h1>发票省纸合并 · 矢量版</h1>
+                <p>每张 A4 排三份发票，保留原 PDF 的文字和线条。</p>
+                {% else %}
+                <p class="notice">内测中，可能会有预期之外的问题，请主动检查合并后的文件</p>
+                <h1>这个网站能让您在一张A4纸中塞下三张发票</h1>
+                <p>点击说明下面灰色的 Choose File，选择所有要打印的发票（拖动鼠标或者按住 Ctrl）。<br><span lang="en">Select the PDF files you want to combine and upload them.</span></p>
+                <p>点击 Open 按钮完成选择，再点击合并&amp;下载。<br><span lang="en">Click the big green button.</span></p>
+                <p>合并文件将出现在您的下载文件夹中。<br><span lang="en">The combined file will be ready in download shortly after.</span></p>
+                {% endif %}
+            </header>
+
+            <form method="post" enctype="multipart/form-data">
+                {% if error %}
+                <p class="error" role="alert">{{ error }}</p>
+                {% endif %}
+                <label for="files">选择发票</label>
+                <input type="file" name="file" id="files" accept=".pdf,.jpg,.jpeg{% if vector %},.ofd{% endif %}" multiple required aria-describedby="file-help">
+                <p id="file-help" class="file-help">{% if vector %}OFD、PDF、JPEG（.jpg / .jpeg）{% else %}PDF、JPEG（.jpg / .jpeg）{% endif %} · 可混选</p>
+                <p id="selection" class="selection" role="status" hidden></p>
+                <button type="submit">{{ '合并并下载' if vector else '合并&下载' }}</button>
+            </form>
+            <section class="guide" aria-labelledby="guide-title">
+                <h2 id="guide-title">使用说明</h2>
+                <ol>
+                    <li>点「选择发票」多选文件，或把文件拖到选择框。每批上传上限为 100 MB。</li>
+                    <li>点「{{ '合并并下载' if vector else '合并&下载' }}」。按文件列表顺序排列，每个文件取第一页，每张 A4 最多放三份。</li>
+                    <li>打开下载的 PDF 核对内容和顺序，选择 A4 纵向打印。</li>
+                </ol>
+            </section>
+            {% if not vector %}<p class="credit">Powered by <a href="https://github.com/JamesW99/InvoicesCombine">Yishan</a></p>{% endif %}
+        </div>
+        <aside class="feedback-panel" aria-labelledby="feedback-title">
+            <form id="feedback-form" action="{{ url_for('feedback') }}" method="post">
+                <h2 id="feedback-title">使用反馈</h2>
+                <p id="feedback-note">这是单向反馈，提交后不会收到回复。</p>
+                <label for="feedback-text">遇到了什么问题，或有什么建议？</label>
+                <textarea id="feedback-text" rows="6" maxlength="500" required aria-describedby="feedback-note" placeholder="最多 500 字"></textarea>
+                <p id="feedback-status" role="status" aria-live="polite"></p>
+                <button type="submit">提交反馈</button>
+            </form>
+        </aside>
+    </main>
+
+    <footer aria-label="使用统计">
+        {% if usage %}
+        <details>
+            <summary>
+                <span>近 3 个月用量</span>
+                <span aria-hidden="true">·</span>
+                <span><strong>{{ usage.total }}</strong> 份</span>
+            </summary>
+            <section class="usage-panel" aria-label="每日合并量">
+                <p class="period">{{ usage.start.isoformat() }} 至 {{ usage.end.isoformat() }} · 格内为当天合并 PDF 份数</p>
+                <div class="months">
+                    {% for year, month, total, weeks in usage.months %}
+                    <table>
+                        <caption><span><strong>{{ month }} 月</strong><span>{{ total }} 份</span></span></caption>
+                        <thead>
+                            <tr>
+                                {% for weekday in "一二三四五六日" %}
+                                <th scope="col" aria-label="星期{{ weekday }}">{{ weekday }}</th>
+                                {% endfor %}
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for week in weeks %}
+                            <tr>
+                                {% for cell in week %}
+                                {% if cell %}
+                                {% set day, count = cell %}
+                                <td class="day{% if count %} used{% endif %}" aria-label="{{ month }} 月 {{ day.day }} 日，{{ count }} 份">
+                                    <time datetime="{{ day.isoformat() }}">{{ day.day }} 日</time>
+                                    <strong>{{ count }}</strong>
+                                </td>
+                                {% else %}
+                                <td aria-hidden="true"></td>
+                                {% endif %}
+                                {% endfor %}
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                    {% endfor %}
+                </div>
+            </section>
+        </details>
+        {% else %}
+        <p class="unavailable">用量暂不可用</p>
+        {% endif %}
+    </footer>
+</body>
+</html>

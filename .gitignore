@@ -1,0 +1,8 @@
+.venv/
+__pycache__/
+instance/
+demo-usage.json
+.env
+*.key
+*.sqlite3*
+ofd/target/

@@ -1,0 +1,30 @@
+[Unit]
+Description=Invoice combiner Bark notifications and health monitor
+Wants=network-online.target
+After=network-online.target invoices-combiner-v2.service
+
+[Service]
+Type=exec
+User=invoices-bark
+Group=invoices-bark
+SupplementaryGroups=invoices-state
+WorkingDirectory=/opt/invoices-combiner-v2/app
+Environment=PYTHONDONTWRITEBYTECODE=1
+Environment=TZ=Asia/Taipei
+Environment=INVOICES_ENVIRONMENT=JP线上
+Environment=INVOICES_ALERT_DB=/var/lib/invoices-combiner-v2/alerts.sqlite3
+Environment=INVOICES_BARK_KEY_FILE=/etc/invoices-combiner-v2/bark.key
+Environment=INVOICES_SYSTEMD_UNIT=invoices-combiner-v2.service
+Environment=INVOICES_HEALTH_URL=https://fapiao.yshain.net/
+ExecStart=/opt/invoices-combiner-v2/.venv/bin/python -u monitor.py
+Restart=always
+RestartSec=5
+NoNewPrivileges=yes
+PrivateTmp=yes
+ProtectSystem=strict
+ProtectHome=yes
+ReadWritePaths=/var/lib/invoices-combiner-v2
+UMask=0007
+
+[Install]
+WantedBy=multi-user.target

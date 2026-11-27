@@ -1,15 +1,14 @@
-
 from PIL import Image, ImageFilter, ImageEnhance
 import fitz  # PyMuPDF library
 from datetime import datetime
 import os
 
 class PDFCombiner:
-    def __init__(self, file_paths, dpi=600):
+    def __init__(self, file_paths, output_directory, dpi=600):
         self.file_paths = file_paths
         self.dpi = dpi
         self.a4_width, self.a4_height = 4960, 7016  # A4 size in pixels at 600 DPI.
-        self.output_directory = 'combined'
+        self.output_directory = output_directory
         self.vertical_margin = 100  # Vertical margin to avoid printing issues at the edges
         self.content_height = self.a4_height - 2 * self.vertical_margin  # Adjusted content height after accounting for margins
         self.right_margin = 500  # Right margin
@@ -60,11 +59,3 @@ class PDFCombiner:
         image = image.filter(ImageFilter.SHARPEN)
         contrast_enhancer = ImageEnhance.Contrast(image)
         return contrast_enhancer.enhance(1.2)
-
-
-# Usage
-if __name__ == '__main__':
-    file_paths = ["1.pdf", "2.pdf", "3.pdf", "4.pdf"]
-    combiner = PDFCombiner(file_paths)
-    pdf_path = combiner.process_files()
-    print(f"The combined PDF is saved at {pdf_path}")

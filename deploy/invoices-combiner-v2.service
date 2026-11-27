@@ -1,0 +1,30 @@
+[Unit]
+Description=Invoice combiner website
+After=network.target
+
+[Service]
+Type=exec
+User=invoices-web
+Group=invoices-web
+SupplementaryGroups=invoices-state
+WorkingDirectory=/opt/invoices-combiner-v2/app
+Environment=PYTHONDONTWRITEBYTECODE=1
+Environment=TZ=Asia/Taipei
+Environment=INVOICES_ENVIRONMENT=JP线上
+Environment=INVOICES_JAVA=/opt/invoices-combiner-v2/runtime/java/bin/java
+Environment=INVOICES_USAGE_DB=/var/lib/invoices-combiner-v2/usage.sqlite3
+Environment=INVOICES_ALERT_DB=/var/lib/invoices-combiner-v2/alerts.sqlite3
+ExecStart=/opt/invoices-combiner-v2/.venv/bin/gunicorn -c deploy/gunicorn.conf.py app:app
+Restart=on-failure
+RestartSec=5
+NoNewPrivileges=yes
+PrivateTmp=yes
+ProtectSystem=strict
+ProtectHome=yes
+ReadWritePaths=/var/lib/invoices-combiner-v2
+UMask=0007
+MemoryMax=3G
+TasksMax=192
+
+[Install]
+WantedBy=multi-user.target
