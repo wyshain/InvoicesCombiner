@@ -5,8 +5,6 @@ import sqlite3
 from contextlib import closing
 from datetime import date, datetime
 from pathlib import Path
-from tempfile import TemporaryDirectory
-from io import BytesIO
 from threading import Lock
 from zoneinfo import ZoneInfo
 
@@ -14,7 +12,6 @@ import click
 from flask import Flask, g, got_request_exception, jsonify, render_template, request, send_file
 
 from combiner import InvalidInvoice, combine
-from legacy import PDFCombiner
 from ofd import OfdUnavailable
 from alerts import notify
 
@@ -44,10 +41,9 @@ def report_exception(sender, exception, **kwargs):
 @app.after_request
 def report_failed_response(response):
     if not getattr(g, "alerted", False) and (response.status_code >= 500 or
-            (request.method == "POST" and request.endpoint in {"legacy", "vector"} and response.status_code >= 400)):
+            (request.method == "POST" and request.endpoint == "vector" and response.status_code >= 400)):
         detail = getattr(g, "failure_reason", f"请求处理失败，HTTP {response.status_code}。")
-        version = "旧版" if request.endpoint == "legacy" else "新版"
-        report("处理失败", version + "：" + detail)
+        report("处理失败", detail)
     return response
 
 
@@ -122,29 +118,10 @@ def render_home(error=None, status=200):
         app.logger.exception("Could not read invoice usage")
         report("统计读取失败", "首页暂时无法读取用量数据库。")
         usage = None
-    return render_template("index.html", usage=usage, error=error, vector=request.endpoint == "vector"), status
+    return render_template("index.html", usage=usage, error=error), status
 
 
-def legacy_download(uploads):
-    if not uploads:
-        raise InvalidInvoice("请先选择至少一份发票。")
-    with TemporaryDirectory() as folder:
-        paths = []
-        for index, upload in enumerate(uploads):
-            suffix = Path(upload.filename).suffix.lower()
-            if suffix not in {".pdf", ".jpeg", ".jpg"}:
-                raise InvalidInvoice("请选择 PDF 或 JPEG 文件。")
-            path = Path(folder) / f"{index}{'.jpg' if suffix == '.jpeg' else suffix}"
-            upload.save(path)
-            paths.append(str(path))
-        try:
-            result = PDFCombiner(paths, folder).process_files()
-            return BytesIO(Path(result).read_bytes())
-        except (ValueError, RuntimeError, OSError, IndexError) as error:
-            raise InvalidInvoice("无法读取文件，请检查 PDF 或 JPEG 是否完整。") from error
-
-
-@app.route("/legacy", methods=["GET", "POST"], endpoint="legacy")
+@app.route("/legacy", methods=["GET", "POST"], endpoint="vector")
 @app.route("/v2", methods=["GET", "POST"], endpoint="vector")
 @app.route("/", methods=["GET", "POST"], endpoint="vector")
 def home():
@@ -155,10 +132,7 @@ def home():
     try:
         # PyMuPDF access must be serialized inside a process.
         with pdf_lock:
-            if request.endpoint == "vector":
-                result = combine((upload.filename, upload.stream) for upload in uploads)
-            else:
-                result = legacy_download(uploads)
+            result = combine((upload.filename, upload.stream) for upload in uploads)
     except InvalidInvoice as error:
         reason = str(error)
         for upload in uploads:

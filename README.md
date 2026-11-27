@@ -1,12 +1,12 @@
 # 发票省纸合并
 
-首页使用矢量排版。右上角“返回旧版”进入 `/legacy`，原有 `/v2` 入口也可访问新版。页面直接显示使用说明和单向反馈输入框。
+首页使用矢量排版。原有 `/v2` 入口也可访问。页面直接显示使用说明和单向反馈输入框。
 
-新版可以混选 OFD、PDF、JPG 和 JPEG。每个文件取第一页，按上传列表顺序每三份排在一张 A4 上。PDF 原有的文字和矢量图形可保留。OFD 先在本机用 OFDRW 转换首页，再交给 PyMuPDF 拼版。旧版使用 600 DPI 图片拼版，接受 PDF 和 JPEG。合并结果用于打印，验签请使用原件。
+可以混选 OFD、PDF、JPG 和 JPEG。每个文件取第一页，按上传列表顺序每三份排在一张 A4 上。PDF 原有的文字和矢量图形可保留。OFD 先在本机用 OFDRW 转换首页，再交给 PyMuPDF 拼版。合并结果用于打印，验签请使用原件。
 
 ## 本机运行
 
-需要 Python 3.11 或更新版本、Maven、Java 17 或 21。Pillow 13 要求 Python 3.11 起。可用 `INVOICES_JAVA` 指定 Java 可执行文件的绝对路径。
+需要 Python 3.10 或更新版本、Maven、Java 17 或 21。可用 `INVOICES_JAVA` 指定 Java 可执行文件的绝对路径。
 
 ```sh
 mvn -f ofd/pom.xml package

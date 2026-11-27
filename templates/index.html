@@ -3,31 +3,16 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>发票省纸合并{% if vector %} · 矢量版{% endif %}</title>
+    <title>发票省纸合并</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='invoice.css') }}">
     <script src="{{ url_for('static', filename='invoice.js') }}" defer></script>
 </head>
-<body class="{{ 'vector' if vector else 'classic' }}">
-    <nav aria-label="切换版本">
-        {% if vector %}
-        <a href="{{ url_for('legacy') }}">返回旧版</a>
-        {% else %}
-        <a href="{{ url_for('vector') }}">进入新版 <span aria-hidden="true">↗</span></a>
-        {% endif %}
-    </nav>
+<body class="vector">
     <main>
         <div class="tool">
             <header>
-                {% if vector %}
                 <h1>发票省纸合并 · 矢量版</h1>
                 <p>每张 A4 排三份发票，保留原 PDF 的文字和线条。</p>
-                {% else %}
-                <p class="notice">内测中，可能会有预期之外的问题，请主动检查合并后的文件</p>
-                <h1>这个网站能让您在一张A4纸中塞下三张发票</h1>
-                <p>点击说明下面灰色的 Choose File，选择所有要打印的发票（拖动鼠标或者按住 Ctrl）。<br><span lang="en">Select the PDF files you want to combine and upload them.</span></p>
-                <p>点击 Open 按钮完成选择，再点击合并&amp;下载。<br><span lang="en">Click the big green button.</span></p>
-                <p>合并文件将出现在您的下载文件夹中。<br><span lang="en">The combined file will be ready in download shortly after.</span></p>
-                {% endif %}
             </header>
 
             <form method="post" enctype="multipart/form-data">
@@ -35,20 +20,19 @@
                 <p class="error" role="alert">{{ error }}</p>
                 {% endif %}
                 <label for="files">选择发票</label>
-                <input type="file" name="file" id="files" accept=".pdf,.jpg,.jpeg{% if vector %},.ofd{% endif %}" multiple required aria-describedby="file-help">
-                <p id="file-help" class="file-help">{% if vector %}OFD、PDF、JPEG（.jpg / .jpeg）{% else %}PDF、JPEG（.jpg / .jpeg）{% endif %} · 可混选</p>
+                <input type="file" name="file" id="files" accept=".pdf,.jpg,.jpeg,.ofd" multiple required aria-describedby="file-help">
+                <p id="file-help" class="file-help">OFD、PDF、JPEG（.jpg / .jpeg） · 可混选</p>
                 <p id="selection" class="selection" role="status" hidden></p>
-                <button type="submit">{{ '合并并下载' if vector else '合并&下载' }}</button>
+                <button type="submit">合并并下载</button>
             </form>
             <section class="guide" aria-labelledby="guide-title">
                 <h2 id="guide-title">使用说明</h2>
                 <ol>
                     <li>点「选择发票」多选文件，或把文件拖到选择框。每批上传上限为 100 MB。</li>
-                    <li>点「{{ '合并并下载' if vector else '合并&下载' }}」。按文件列表顺序排列，每个文件取第一页，每张 A4 最多放三份。</li>
+                    <li>点「合并并下载」。按文件列表顺序排列，每个文件取第一页，每张 A4 最多放三份。</li>
                     <li>打开下载的 PDF 核对内容和顺序，选择 A4 纵向打印。</li>
                 </ol>
             </section>
-            {% if not vector %}<p class="credit">Powered by <a href="https://github.com/JamesW99/InvoicesCombine">Yishan</a></p>{% endif %}
         </div>
         <aside class="feedback-panel" aria-labelledby="feedback-title">
             <form id="feedback-form" action="{{ url_for('feedback') }}" method="post">
